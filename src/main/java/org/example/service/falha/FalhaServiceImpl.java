@@ -24,8 +24,14 @@ public class FalhaServiceImpl implements FalhaService{
             conn = Conexao.conectar();
             conn.setAutoCommit(false);
 
-            if (!equals(conn)) {
-                throw new IllegalArgumentException("Equipamento não encontrado!");
+            String checkEquipamentoQuery = "SELECT 1 FROM Equipamento WHERE id = ?";
+            try (PreparedStatement stmtCheck = conn.prepareStatement(checkEquipamentoQuery)) {
+                stmtCheck.setLong(1, idEquipamento);
+                try (ResultSet rs = stmtCheck.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new IllegalArgumentException("Equipamento não encontrado!");
+                    }
+                }
             }
 
             String insertFalhaQuery =
@@ -40,6 +46,7 @@ public class FalhaServiceImpl implements FalhaService{
                 stmtInsert.setObject(2, falha.getDataHoraOcorrencia());
                 stmtInsert.setString(3, falha.getDescricao());
                 stmtInsert.setString(4, falha.getCriticidade());
+                stmtInsert.setObject(5, falha.getTempoParadaHoras()); // Assumindo que tempoParadaHoras é um campo da Falha
 
                 stmtInsert.executeUpdate();
 
@@ -63,17 +70,31 @@ public class FalhaServiceImpl implements FalhaService{
                 }
             }
 
+            conn.commit();
+
             return falha;
 
         } catch (SQLException | IllegalArgumentException e) {
             if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
             }
         }
-        return falha;
     }
 
     @Override
     public List<Falha> buscarFalhasCriticasAbertas() throws SQLException {
+
         String query = """
         SELECT id, equipamentoId, dataHoraOcorrencia, descricao, criticidade, status, tempoParadaHoras
         FROM Falha
@@ -97,7 +118,10 @@ public class FalhaServiceImpl implements FalhaService{
                 falha.setCriticidade(rs.getString("criticidade"));
                 falha.setStatus(rs.getString("status"));
 
-                falha.setTempoParadaHoras(BigDecimal.valueOf(rs.getObject("tempoParadaHoras", Double.class)));
+                Double tempoParada = rs.getObject("tempoParadaHoras", Double.class);
+                if (tempoParada != null) {
+                    falha.setTempoParadaHoras(BigDecimal.valueOf(tempoParada));
+                }
 
                 falhas.add(falha);
             }

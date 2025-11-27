@@ -8,6 +8,7 @@ public class AcaoCorretivaServiceImpl implements AcaoCorretivaService{
 
     @Override
     public AcaoCorretiva registrarConclusaoDeAcao(AcaoCorretiva acao) throws SQLException {
+        String query = "";
         return null;
     }
 }

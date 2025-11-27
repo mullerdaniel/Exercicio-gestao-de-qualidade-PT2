@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Teste de Integração - FalhaService com Banco Real (Teste)")
-public class FalhaServiceIntegrationTest {
+public class    FalhaServiceIntegrationTest {
 
     private FalhaService falhaService;
     private EquipamentoService equipamentoService;

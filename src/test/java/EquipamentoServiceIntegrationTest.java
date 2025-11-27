@@ -163,3 +163,5 @@ public class EquipamentoServiceIntegrationTest {
         assertEquals("Equipamento não encontrado!", e.getMessage());
     }
 }
+
+
