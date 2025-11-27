@@ -1,1 +1,0 @@
-# Exercicio-gestao-de-qualidade-PT2

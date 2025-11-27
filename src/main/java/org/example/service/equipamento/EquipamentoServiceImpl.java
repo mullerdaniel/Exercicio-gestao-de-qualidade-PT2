@@ -11,20 +11,32 @@ import java.sql.SQLException;
 public class EquipamentoServiceImpl implements EquipamentoService{
     @Override
     public Equipamento criarEquipamento(Equipamento equipamento) throws SQLException {
+
+        if (equipamento.getStatusOperacional() == null || equipamento.getStatusOperacional().trim().isEmpty()) {
+            equipamento.setStatusOperacional("OPERACIONAL");
+        }
+
         String query = "INSERT INTO Equipamento (nome, numeroDeSerie, areaSetor, statusOperacional) VALUES (?,?,?,?)";
 
-        try(Connection conn = Conexao.conectar();
-            PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, equipamento.getNome());
             stmt.setString(2, equipamento.getNumeroDeSerie());
             stmt.setString(3, equipamento.getAreaSetor());
             stmt.setString(4, equipamento.getStatusOperacional());
+
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    equipamento.setId(rs.getLong(1));
+                }
+            }
+
         }
         return equipamento;
     }
-
 
 
     @Override
